@@ -1,0 +1,26 @@
+# Virtual environment
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Chainlit cache and local data
+.chainlit/
+vectorstore/
+data/
+
+# Model files (too large for GitHub)
+models/
+*.bin
+*.gguf
+
+# Environment variables
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
