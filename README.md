@@ -1,48 +1,50 @@
-# 🧠 LLaMA2 Medical Chatbot – CPU Edition
+LLaMA2 Medical Chatbot – CPU Edition
+The LLaMA2 Medical Chatbot is a tool designed to provide medical information by answering user queries using state-of-the-art language models and dynamic document retrieval. Users can upload their own medical PDFs, and the bot will instantly integrate them into its knowledge base — no restart required.
 
-The **LLaMA2 Medical Chatbot** is a tool designed to provide medical information by answering user queries using **state-of-the-art language models** and **dynamic document retrieval**. Users can upload their own medical PDFs, and the bot will instantly integrate them into its knowledge base — no restart required.
+This version runs entirely on CPU, so it works on laptops without GPU support.
 
-This version runs entirely on **CPU**, so it works on laptops without GPU support.
+📑 Table of Contents
+Introduction
 
----
+Features
 
-## 📑 Table of Contents
+Architecture
 
-* [Introduction](#introduction)
-* [Features](#features)
-* [Architecture](#architecture)
-* [Prerequisites](#prerequisites)
-* [Installation](#installation)
-* [Getting Started](#getting-started)
-* [Usage](#usage)
-* [Future Plans](#future-plans)
-* [Contributing](#contributing)
-* [License](#license)
+Prerequisites
 
----
+Installation
 
-## 📌 Introduction
+Downloading the Model
 
-The LLaMA2 Medical Chatbot is a **retrieval-augmented generation (RAG)** system that:
+Getting Started
 
-* Uses **LLaMA2** for language understanding.
-* Retrieves relevant passages from uploaded PDFs using **FAISS vector search**.
-* Runs **completely on CPU** for compatibility with most laptops.
+Usage
 
----
+Future Plans
 
-## ✨ Features
+Contributing
 
-✅ **Dynamic PDF Knowledge Base** – Upload new PDFs anytime, and the bot will instantly use them for answering questions.
-✅ **Fast Semantic Search** – Uses embeddings for context-aware document retrieval.
-✅ **CPU-Only Compatibility** – No GPU required; works on most personal machines.
-✅ **Web-Based Interface** – Simple and interactive UI with **Chainlit**.
+License
 
----
+📌 Introduction
+The LLaMA2 Medical Chatbot is a retrieval-augmented generation (RAG) system that:
 
-## 🏗 Architecture
+Uses LLaMA2 for language understanding.
 
-```mermaid
+Retrieves relevant passages from uploaded PDFs using FAISS vector search.
+
+Runs completely on CPU for compatibility with most laptops.
+
+✨ Features
+✅ Dynamic PDF Knowledge Base – Upload new PDFs anytime, and the bot will instantly use them for answering questions.
+✅ Fast Semantic Search – Uses embeddings for context-aware document retrieval.
+✅ CPU-Only Compatibility – No GPU required; works on most personal machines.
+✅ Web-Based Interface – Simple and interactive UI with Chainlit.
+
+🏗 Architecture
+mermaid
+Copy
+Edit
 flowchart TD
     U[User] --> UI[Web Interface - Chainlit]
     UI --> UP[Upload PDF]
@@ -55,100 +57,100 @@ flowchart TD
     RET --> GEN[Generate Answer with Context]
     GEN --> UI
     UI --> U
-```
+Explanation:
 
-**Explanation:**
+User uploads PDFs → Text is extracted → Converted to embeddings → Stored in FAISS.
 
-1. User uploads PDFs → Text is extracted → Converted to embeddings → Stored in FAISS.
-2. When the user asks a question, LLaMA2 retrieves relevant document chunks.
-3. The model generates an answer using both the document context and its own knowledge.
+When the user asks a question, LLaMA2 retrieves relevant document chunks.
 
----
+The model generates an answer using both the document context and its own knowledge.
 
-## 📦 Prerequisites
+📦 Prerequisites
+Python 3.8+
 
-* **Python 3.8+**
-* Required Python packages (installed via `requirements.txt`):
+Required Python packages (installed via requirements.txt):
 
-  * `langchain`
-  * `chainlit`
-  * `sentence-transformers`
-  * `faiss-cpu`
-  * `pypdf` (for PDF loading)
-  * `transformers` (for LLaMA2 model)
-  * `torch` (CPU version)
+langchain
 
----
+chainlit
 
-## ⚙️ Installation
+sentence-transformers
 
-1. **Clone the repository**
+faiss-cpu
 
-```bash
+pypdf (for PDF loading)
+
+transformers (for LLaMA2 model)
+
+torch (CPU version)
+
+⚙️ Installation
+Clone the repository
+
+bash
+Copy
+Edit
 git clone https://github.com/your-username/llama2-medical-chatbot.git
 cd llama2-medical-chatbot
-```
+Create and activate a virtual environment (recommended)
 
-2. **Create and activate a virtual environment** (recommended)
-
-```bash
+bash
+Copy
+Edit
 python -m venv venv
 venv\Scripts\activate  # Windows
 source venv/bin/activate  # macOS/Linux
-```
+Install dependencies
 
-3. **Install dependencies**
-
-```bash
+bash
+Copy
+Edit
 pip install -r requirements.txt
-```
+📥 Downloading the Model
+This project uses the LLaMA 2 7B Chat GGML model from TheBloke on Hugging Face.
 
-4. **Download the LLaMA2 model**
-   Follow the HuggingFace instructions for downloading LLaMA2 (you may need an access request).
+After cloning this repo, download the file:
 
----
+python
+Copy
+Edit
+llama-2-7b-chat.ggmlv3.q4_0.bin
+and place it inside the models/ folder.
 
-## 🚀 Getting Started
+🚀 Getting Started
+Make sure your .env file contains any required keys (e.g., HuggingFace access token if using gated models).
 
-1. Make sure your `.env` file contains any required keys (e.g., HuggingFace access token if using gated models).
-2. Start the Chainlit app:
+Start the Chainlit app:
 
-```bash
+bash
+Copy
+Edit
 chainlit run model.py -w
-```
+Open the app in your browser at http://localhost:8000.
 
-3. Open the app in your browser at **[http://localhost:8000](http://localhost:8000)**.
+💡 Usage
+Upload PDFs – Drag and drop medical PDFs into the interface.
 
----
+Ask Questions – Type a question in the chat; the bot retrieves relevant info from your uploaded documents.
 
-## 💡 Usage
+Get Contextual Answers – The bot responds with an answer and may include references from your documents.
 
-1. **Upload PDFs** – Drag and drop medical PDFs into the interface.
-2. **Ask Questions** – Type a question in the chat; the bot retrieves relevant info from your uploaded documents.
-3. **Get Contextual Answers** – The bot responds with an answer and may include references from your documents.
+🔮 Future Plans
+📷 Medical Image Q&A – Interpret X-rays, MRIs, and other scans.
 
----
+⚡ GPU Acceleration Option – Faster response times for large models.
 
-## 🔮 Future Plans
+📊 Source Highlighting – Show exactly where in the PDF the answer came from.
 
-* 📷 **Medical Image Q\&A** – Interpret X-rays, MRIs, and other scans.
-* ⚡ **GPU Acceleration Option** – Faster response times for large models.
-* 📊 **Source Highlighting** – Show exactly where in the PDF the answer came from.
-
----
-
-## 🤝 Contributing
-
+🤝 Contributing
 Contributions are welcome!
 
-1. Fork this repo.
-2. Create a branch for your feature.
-3. Submit a pull request with a clear explanation of your changes.
+Fork this repo.
 
----
+Create a branch for your feature.
 
-## 📜 License
+Submit a pull request with a clear explanation of your changes.
 
+📜 License
 This project is licensed under the MIT License.
 
----
