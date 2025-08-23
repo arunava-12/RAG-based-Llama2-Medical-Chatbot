@@ -1,6 +1,4 @@
-# 🏥 RAG based LLaMA2 Medical Chatbot – CPU Edition (with PDF + Image Support)
-
-The **LLaMA2 Medical Chatbot** is an intelligent assistant that provides medical information by answering user queries using **state-of-the-art language models** and **dynamic document/image retrieval**.
+# LLaMA2 Medical Chatbot – CPU Edition
 
 Users can upload **PDFs or medical images (JPG/PNG/TIFF, etc.)**, and the bot will instantly integrate them into its knowledge base — no restart required.
 
