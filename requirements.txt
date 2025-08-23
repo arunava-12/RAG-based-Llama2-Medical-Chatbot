@@ -1,16 +1,25 @@
+# PDF + OCR
 pypdf
+pytesseract
+Pillow
+opencv-python
+
+# LangChain + Vector DB
 langchain
+langchain_community
+faiss-cpu
+
+# Embeddings + Transformers
 torch
 accelerate
 bitsandbytes
-ctransformers
-sentence_transformers
-faiss_cpu
-chainlit
+sentence-transformers
 huggingface_hub
-langchain_community
-Pillow
+ctransformers
+
+# LLM + APIs
 openai
 groq
-pytesseract
-opencv-python
+
+# UI / Dev tools
+chainlit
