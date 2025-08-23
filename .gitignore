@@ -12,6 +12,7 @@ __pycache__/
 .chainlit/
 vectorstore/
 data/
+.files/
 
 # Model files (too large for GitHub)
 models/

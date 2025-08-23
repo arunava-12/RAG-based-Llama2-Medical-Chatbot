@@ -9,6 +9,8 @@ faiss_cpu
 chainlit
 huggingface_hub
 langchain_community
-PyPDF2
 Pillow
 openai
+groq
+pytesseract
+opencv-python
