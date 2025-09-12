@@ -1,3 +1,6 @@
 venv\Scripts\activate
 pip install -r requirements.txt
 chainlit run model.py -w
+
+https://omc.azmd.gov/Files/OMC/OMC-Orientation/OMC-Orientation_files/img20.html
+sites to get report
