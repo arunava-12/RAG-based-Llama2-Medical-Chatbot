@@ -149,7 +149,7 @@ This ensures your PDFs are ready for semantic search.
 2. Start the Chainlit app:
 
 ```bash
-py -3.11 -m chainlit run model.py -w 
+chainlit run model.py -w
 ```
 
 3. Open the app in your browser at **[http://localhost:8000](http://localhost:8000)**.
