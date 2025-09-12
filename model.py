@@ -14,20 +14,16 @@ import chainlit as cl
 DB_FAISS_PATH = 'vectorstore/db_faiss'
 
 custom_prompt_template = """Use the following pieces of information to answer the user's question.
-If you don't know the answer, just say that you don't know, don't try to make up an answer.
+If you don't know the answer, just say that you don't know.
 
 Context: {context}
 Question: {question}
-
-Only return the helpful answer below and nothing else.
-Do not include source references or metadata.
 
 Helpful answer:
 """
 
 # ---------- OCR IMAGE HANDLER ----------
 def extract_text_from_image(image_path: str) -> str:
-    """Extract text from an image using OpenCV + pytesseract"""
     img = cv2.imread(image_path)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
@@ -53,7 +49,6 @@ def retrieval_qa_chain(llm, prompt, db):
 
 # ---------- LLM LOADERS ----------
 def load_llm():
-    """Local Llama2 model"""
     return CTransformers(
         model="TheBloke/Llama-2-7B-Chat-GGML",
         model_type="llama",
@@ -62,10 +57,9 @@ def load_llm():
     )
 
 def load_groq_llm():
-    """Groq API model"""
     return ChatGroq(
         temperature=0.5,
-        model_name="llama3-70b-8192",   # ✅ updated model
+        model_name="llama-3.1-8b-instant",
         api_key=os.getenv("GROQ_API_KEY")
     )
 
@@ -76,7 +70,6 @@ def qa_bot():
         model_kwargs={'device': 'cpu'}
     )
 
-    # ensure FAISS index exists
     if not os.path.exists(DB_FAISS_PATH):
         os.makedirs(DB_FAISS_PATH, exist_ok=True)
         db = FAISS.from_texts(["Medical bot initialized."], embeddings)
@@ -92,22 +85,17 @@ def qa_bot():
 async def start():
     chain = qa_bot()
     cl.user_session.set("chain", chain)
+    cl.user_session.set("groq", load_groq_llm())
 
-    # ask user to upload PDFs or Images
     files = await cl.AskFileMessage(
-        content="👋 Hi! Welcome to Medical Bot.\n\nUpload **PDFs or Images** to extend my knowledge base.",
+        content="👋 Hi! Welcome!\n\nUpload **PDFs or Images** — I’ll explain them with Groq by default.\n\nYou can also:\n- `local: question` → search your uploaded PDFs (FAISS)\n- `groq: question` → ask Groq directly.",
         accept=["application/pdf", "image/png", "image/jpeg"],
         max_size_mb=20,
         max_files=3
     ).send()
 
     if files:
-        embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2",
-            model_kwargs={'device': 'cpu'}
-        )
-        db = FAISS.load_local(DB_FAISS_PATH, embeddings, allow_dangerous_deserialization=True)
-
+        groq_llm = cl.user_session.get("groq")
         for file in files:
             file_path = f"./.files/{file.name}"
             with open(file_path, "wb") as f:
@@ -123,58 +111,67 @@ async def start():
                 text = extract_text_from_image(file_path)
 
             if text:
-                db.add_texts([text])
+                res = await groq_llm.ainvoke(
+                    f"Here is the extracted content:\n{text}\n\nPlease summarize or explain it in simple terms."
+                )
+                await cl.Message(content=res.content + f"\n\n(Processed from {file.name} by Groq)").send()
 
-        db.save_local(DB_FAISS_PATH)
-        await cl.Message(content=f"✅ Uploaded {len(files)} file(s) and updated knowledge base.").send()
-
-    await cl.Message(content="📌 You can now ask your questions.\n- Use `local: question`\n- Or `groq: question`").send()
+    await cl.Message(content="📌 Ready! Ask your questions anytime.").send()
 
 @cl.on_message
 async def main(message: cl.Message):
     chain = cl.user_session.get("chain")
-    if chain is None:
-        await message.reply("Chain not initialized, please restart the bot.")
+    groq_llm = cl.user_session.get("groq")
+
+    if chain is None or groq_llm is None:
+        await message.reply("Bot not initialized, please restart.")
         return
 
     user_input = message.content.strip()
 
-    # --- explicit Groq choice ---
+    # --- explicit Groq ---
     if user_input.lower().startswith("groq:"):
         query = user_input.replace("groq:", "").strip()
-        groq_llm = load_groq_llm()
         res = await groq_llm.ainvoke(query)
         await cl.Message(content=res.content + "\n\n(Answered by Groq API)").send()
         return
 
-    # --- explicit Local choice ---
+    # --- explicit Local ---
     if user_input.lower().startswith("local:"):
         query = user_input.replace("local:", "").strip()
-    else:
-        query = user_input  # default → try local first
+        cb = cl.AsyncLangchainCallbackHandler(
+            stream_final_answer=True,
+            answer_prefix_tokens=["FINAL", "ANSWER"]
+        )
+        cb.answer_reached = True
 
+        res = await chain.ainvoke(query, callbacks=[cb])
+        answer = res["result"]
+        sources = res["source_documents"]
+
+        if sources:
+            srcs = [f"{doc.metadata.get('source','Unknown')} (page {doc.metadata.get('page','N/A')})" for doc in sources]
+            answer += "\n\nSources:\n" + "\n".join(srcs)
+
+        await cl.Message(content=answer).send()
+        return
+
+    # --- default (try local, else Groq) ---
     cb = cl.AsyncLangchainCallbackHandler(
         stream_final_answer=True,
         answer_prefix_tokens=["FINAL", "ANSWER"]
     )
     cb.answer_reached = True
 
-    res = await chain.ainvoke(query, callbacks=[cb])
+    res = await chain.ainvoke(user_input, callbacks=[cb])
     answer = res["result"]
     sources = res["source_documents"]
 
     if sources:
-        source_texts = []
-        for doc in sources:
-            meta = doc.metadata
-            src = meta.get('source', 'Unknown source')
-            page = meta.get('page', 'N/A')
-            source_texts.append(f"{src} (page {page})")
-        answer += "\n\nSources:\n" + "\n".join(source_texts)
+        srcs = [f"{doc.metadata.get('source','Unknown')} (page {doc.metadata.get('page','N/A')})" for doc in sources]
+        answer += "\n\nSources:\n" + "\n".join(srcs)
     else:
-        # fallback → Groq if no local match
-        groq_llm = load_groq_llm()
-        groq_res = await groq_llm.ainvoke(query)
-        answer = groq_res.content + "\n\n(No matching sources in uploaded PDFs/Images — answered by Groq API)"
+        groq_res = await groq_llm.ainvoke(user_input)
+        answer = groq_res.content + "\n\n(No local sources — answered by Groq API)"
 
     await cl.Message(content=answer).send()
